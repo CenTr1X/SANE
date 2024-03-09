@@ -1,0 +1,110 @@
+version: "3"
+
+services:
+  lidar:
+    image:  centr1x/zcu
+    container_name: lidar
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+  
+  monitor:
+    image:  centr1x/zcu
+    container_name: monitor
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  front_left_zcu:
+    image:  centr1x/zcu
+    container_name: front_left_zcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - front_left_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  front_right_zcu:
+    image:  centr1x/zcu
+    container_name: front_right_zcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - front_right_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  rear_left_zcu:
+    image:  centr1x/zcu
+    container_name: rear_left_zcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - rear_left_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  rear_right_zcu:
+    image:  centr1x/zcu
+    container_name: rear_right_zcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - rear_right_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  gateway:
+    image:  centr1x/computer
+    container_name: gateway
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+
+networks:
+  backbone_network:
+  front_left_network:
+  front_right_network:
+  rear_left_network:
+  rear_right_network:

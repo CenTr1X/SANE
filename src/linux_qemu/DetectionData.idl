@@ -1,0 +1,19 @@
+module TireWarningData
+{
+  struct Info
+  {
+    unsigned long numberOfTire;
+    string context;
+    unsigned long level;
+  };
+};
+
+module HudWarningData
+{
+  struct Info
+  {
+    string location;
+    string context;
+    unsigned long level;
+  };
+};

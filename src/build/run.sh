@@ -1,0 +1,1 @@
+qemu-system-arm -M versatilepb -nographic -m 256 -kernel image.elf -nic socket,mcast=230.0.0.1:6666 

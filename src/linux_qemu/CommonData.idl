@@ -1,0 +1,8 @@
+module CommonData
+{
+  struct Data
+  {
+    long no;
+    string context;
+  };
+};

@@ -1,0 +1,65 @@
+#!/usr/bin/expect -f
+
+global eth0
+
+proc sendToUART {s} {
+    for {set i 0} {$i < [string length $s]} {incr i} {
+        set char [string index $s $i]
+        send $char
+        sleep 0.1
+    }
+    send "\n"
+}
+
+proc find {interface output} {
+    foreach line [split $output "\n"] {
+        if {[string match {*inet *} $line]} {
+            set ip [lindex [split $line " "] 9]
+            if {$interface eq "eth0"} {
+                global eth0
+                set eth0 $ip
+            } else {
+                global eth1
+                set eth1 $ip
+            }
+            break
+        }
+    }
+}
+
+
+set ip ""
+catch {exec ifconfig eth0} result0
+
+set fileHandle2 [open "result_unit1.txt" "w"]
+
+#puts $result0
+set isError0 -1
+set isError0 [string first "Device not found" $result0]
+
+find "eth0" $result0 
+
+trap {
+    exec sh /home/stop_qemu.sh
+} SIGINT
+# Wait enough (forever) until a long-time boot
+
+set index [lindex $argv 0]
+set timeout -1
+# Start the guest VM
+spawn ./qemu-system-arm -M versatilepb -nographic   -m 256 -kernel image.elf -nic socket,id=u1,mcast=230.0.0.2:6666,localaddr=$eth0 -object filter-dump,id=f1,netdev=u1,file=1.pcap
+sleep 0.1
+sendToUART "set l2 $eth0"
+sleep 0.1
+sendToUART "init $index"
+
+
+expect {
+    -re {task\d+ (sent|recv) no.(\d+) } {
+        puts $fileHandle2 "$expect_out(0,string): [clock milliseconds]"
+        exp_continue
+    }
+}
+
+exec sh /home/stop_qemu.sh
+#interact

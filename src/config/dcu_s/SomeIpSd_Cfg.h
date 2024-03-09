@@ -1,0 +1,20 @@
+#ifndef _SOMEIPSD_CFG_H
+#define _SOMEIPSD_CFG_H
+/* ================================ [ MACROS    ] ============================================== */
+#define SD_RX_PID_MULTICAST 0
+#define SD_RX_PID_UNICAST 0
+
+#define SD_SERVER_SERVICE_HANDLE_ID_CLIENT0 0
+#define SD_CLIENT_SERVICE_HANDLE_ID_SERVER0 0
+
+#define SD_EVENT_HANDLER_CLIENT0_EVENT_GROUP2 0
+#define SD_CONSUMED_EVENT_GROUP_SERVER0_EVENT_GROUP1 0
+
+#define SD_MAIN_FUNCTION_PERIOD 10
+#define SD_CONVERT_MS_TO_MAIN_CYCLES(x) \
+  ((x + SD_MAIN_FUNCTION_PERIOD - 1) / SD_MAIN_FUNCTION_PERIOD)
+
+//temp:
+#define SOMEIP_SSID_CLIENT0 0
+#define SOMEIP_CSID_SERVER0 1
+#endif

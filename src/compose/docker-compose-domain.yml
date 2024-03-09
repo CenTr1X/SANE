@@ -1,0 +1,110 @@
+version: "3"
+
+services:
+  monitor:
+    image:  centr1x/monitor
+    container_name: monitor
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain1_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  body_dcu:
+    image:  centr1x/dcu
+    container_name: body_dcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain1_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+
+  powertrain_dcu:
+    image:  centr1x/dcu
+    container_name: powertrain_dcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain2_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+
+  gateway:
+    image:  centr1x/computer
+    container_name: gateway
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  passive_safety_dcu:
+    image:  centr1x/dcu
+    container_name: passive_safety_dcu
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain3_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  adas_dcu:
+    image:  centr1x/dcu
+    container_name: adas_dcu
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain4_network
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  lidar:
+    image:  centr1x/sensor
+    container_name: lidar
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - domain4_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+networks:
+  domain1_network:
+  backbone_network:
+  domain2_network:
+  domain3_network:
+  domain4_network:

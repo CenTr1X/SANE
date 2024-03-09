@@ -1,0 +1,85 @@
+#!/usr/bin/expect -f
+
+global eth0
+
+proc sendToUART {s} {
+    # 执行你的自定义逻辑
+    for {set i 0} {$i < [string length $s]} {incr i} {
+        set char [string index $s $i]
+        # 处理当前字符
+        #puts "Character at index $i: $char"
+        send $char
+        sleep 0.3
+    }
+    send "\n"
+}
+
+proc find {interface output} {
+    foreach line [split $output "\n"] {
+        if {[string match {*inet *} $line]} {
+            #puts $line
+            #puts [split $line " "]
+            set ip [lindex [split $line " "] 9]
+            #puts $interface 
+            #puts $ip
+            #puts "set $interface $ip"
+            if {$interface eq "eth0"} {
+                global eth0
+                set eth0 $ip
+            } else {
+                global eth1
+                set eth1 $ip
+            }
+            break
+        }
+    }
+}
+
+
+set ip ""
+catch {exec ifconfig eth0} result0
+
+set fileHandle2 [open "result_unit_sd_sensor.txt" "w"]
+
+#puts $result0
+set isError0 -1
+set isError0 [string first "Device not found" $result0]
+
+find "eth0" $result0 
+
+trap {
+    exec sh /home/stop_qemu.sh
+} SIGINT
+# Wait enough (forever) until a long-time boot
+set timeout -1
+# Start the guest VM
+spawn qemu-system-arm -M versatilepb -nographic   -m 256 -kernel image.elf -nic socket,id=u1,mcast=230.0.0.1:6666,localaddr=$eth0 
+sleep 0.1
+#set eth0 "10.22.0.2"
+sendToUART "set l0 $eth0"
+#interact
+sleep 0.1
+#sendToUART "sdopenc"
+#sleep 0.1
+#sendToUART "subscribe"
+sendToUART "go"
+sleep 0.1
+sendToUART "run"
+
+set offset -255
+expect {
+    -re {(ssend|srecv) no.(\d+) now : (\d+) } {
+        if {$offset eq -255} {
+            set current_time [clock milliseconds]
+            set string_value $expect_out(3,string)
+            set numeric_value [expr $string_value]
+            set offset [expr $current_time - $numeric_value]
+            puts $fileHandle2 "offset: $offset"
+        }
+        puts $fileHandle2 "$expect_out(0,string) [clock milliseconds]"
+        exp_continue
+    }
+}
+
+exec sh /home/stop_qemu.sh
+#interact

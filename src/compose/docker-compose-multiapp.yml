@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  client:
+    image:  centr1x/client
+    container_name: client
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    cap_add:
+      - NET_ADMIN
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  server:
+    image:  centr1x/computer
+    container_name: server
+    stdin_open: true
+    tty: true
+    command: sh -c "cd /home && /bin/bash"
+    networks: 
+      - backbone_network
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+
+
+networks:
+  backbone_network:

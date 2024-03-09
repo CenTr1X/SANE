@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+
+global eth0
+
+proc sendToUART {s} {
+    for {set i 0} {$i < [string length $s]} {incr i} {
+        set char [string index $s $i]
+        send $char
+    }
+    send "\n"
+}
+
+proc find {interface output} {
+    foreach line [split $output "\n"] {
+        if {[string match {*inet *} $line]} {
+            set ip [lindex [split $line " "] 9]
+            if {$interface eq "eth0"} {
+                global eth0
+                set eth0 $ip
+            } else {
+                global eth1
+                set eth1 $ip
+            }
+            break
+        }
+    }
+}
+
+trap {
+        interact
+        exec sh /home/stop_qemu.sh
+        close $fileHandle
+} SIGINT
+
+set ip ""
+catch {exec ifconfig eth0} result0
+catch {exec ifconfig eth1} result1
+
+set isError0 -1
+set isError1 -1
+set isError0 [string first "Device not found" $result0]
+set isError1 [string first "Device not found" $result1]
+
+set fileHandle [open "result_unit0.txt" "w"]
+set arg1 [lindex $argv 0]
+if {$arg1 == "z"} {
+    set program "./gateway_zone" 
+} elseif {$arg1 == "m"} {
+    set program "./gateway_multiapp"
+} else {
+    set program "./gateway_domain"
+}
+
+find "eth0" $result0 
+# Wait enough (forever) until a long-time boot
+set timeout -1
+
+# Start the guest VM
+spawn qemu-system-x86_64 -m 512 -nic socket,mcast=230.0.0.2:6666  -boot c -hda alpine.qcow2 -nographic
+expect {localhost login:} {send "root\n"}
+expect {Password:} {send "root\n"}
+send "ifconfig eth0 $eth0\n"
+send "cd /home/cyclonedds-master/build/bin && $program \n"
+#interact
+set offset -255
+expect -re {(topic\d+) (recv|sent) no.\d+ now : (\d+) } {
+    if {$offset eq -255} {
+        set current_time [clock milliseconds]
+        set string_value $expect_out(3,string)
+        set numeric_value [expr $string_value]
+        set offset [expr $current_time - $numeric_value]
+        puts $fileHandle "offset: $offset"
+    }
+    puts $fileHandle "$expect_out(0,string) [clock milliseconds]"
+    exp_continue
+}
+
+
+
+

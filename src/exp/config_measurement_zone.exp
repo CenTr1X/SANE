@@ -1,0 +1,93 @@
+#!/usr/bin/expect -f
+
+global eth0
+global eth1
+
+proc sendToUART {s target waiting_time} {
+    puts "sendToUART:$s $target"
+    for {set i 0} {$i < [string length $s]} {incr i} {
+        set char [string index $s $i]
+        # 处理当前字符
+        #puts "Character at index $i: $char"
+        send -i $target $char
+        sleep $waiting_time
+    }
+    send -i $target "\n"
+}
+
+proc find {interface output} {
+    foreach line [split $output "\n"] {
+        if {[string match {*inet *} $line]} {
+            #puts $line
+            #puts [split $line " "]
+            set ip [lindex [split $line " "] 9]
+            #puts $interface 
+            #puts $ip
+            #puts "set $interface $ip"
+            if {$interface eq "eth0"} {
+                global eth0
+                set eth0 $ip
+            } else {
+                global eth1
+                set eth1 $ip
+            }
+            break
+        }
+    }
+}
+
+trap {
+    interact -i $first_window
+    exec sh /home/stop_qemu.sh
+    close $fileHandle
+} SIGINT
+
+set ip ""
+catch {exec ifconfig eth0} result0
+catch {exec ifconfig eth1} result1
+
+#puts $result0
+#puts $result1
+set isError0 -1
+set isError1 -1
+set isError0 [string first "Device not found" $result0]
+set isError1 [string first "Device not found" $result1]
+
+set index [lindex $argv 0]
+set fileHandle [open "result_unit$index.txt" "w"]
+set fileHandle2 [open "result_unit_sd$index.txt" "w"]
+puts $index
+
+# Wait enough (forever) until a long-time boot
+set timeout -1
+
+find "eth0" $result0 
+find "eth1" $result1 
+
+# Start the guest VM
+
+spawn ./qemu-system-arm -M versatilepb -nographic   -m 256 -kernel dds.elf -nic socket,id=u1,mcast=230.0.0.2:6666,localaddr=$eth0 -d guest_errors -D 4.txt
+set first_window $spawn_id
+
+    puts "Variable is not 1 or 3"
+    set offset1 -255
+    sleep 1
+    sendToUART "set l2 $eth0" $first_window 0.001
+    sleep 0.1
+    sendToUART "init $index" $first_window 0.001
+
+    expect {
+        -i $first_window -re {(topic\d+) (recv|sent|recvf) no.(\d+) now : (\d+) } {
+            if {$offset1 eq -255} {
+                set current_time [clock milliseconds]
+                set string_value $expect_out(4,string)
+                set numeric_value [expr $string_value]
+                set offset1 [expr $current_time - $numeric_value]
+                puts $fileHandle "offset: $offset1"
+            }
+            puts $fileHandle "$expect_out(0,string) [clock milliseconds]"
+            exp_continue
+        }
+    }
+
+

@@ -1,0 +1,7 @@
+src/result/
+*.o
+*.bin
+*.img
+*.elf
+*~
+.vscode/
